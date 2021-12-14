@@ -1,17 +1,41 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React, { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
+import ConstrainedEditor from "./constrainedMonaco"; 
+import mdit from 'markdown-it'
+
+function Editor(props: {url: string}) {
+    const divEl = useRef<HTMLDivElement>(null);
+    //any type because don't want to import monaco here
+    let constrainedEditor: any;
+    const [text, changeText] = useState('abcd\n## qwerty\nqkwjqwjr')
+  
+    useEffect(() => {
+      let text: string = 'abcd\n## qwerty\nqkwjqwjr';
+  
+      if (divEl.current != null) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        constrainedEditor = new ConstrainedEditor(divEl.current, props.url, text, [[2, 1, 3, 0]]);
+      }
+
+      constrainedEditor.editor.getModel().onDidChangeContent((event: any) => {
+        changeText(constrainedEditor.editor.getValue())
+      })
+
+      return () => {
+        constrainedEditor.dispose();
+      };
+    }, []);
+
+    let md = new mdit();
+    let result = md.render('# markdown-it rulezz!')
+  
+    return <div>
+        <iframe className="preview" srcDoc={md.render(text)}></iframe> :
+        <div className="editor" ref={divEl}></div> 
+    </div>; 
+  }
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+  <Editor url='0.0.0.0'></Editor>,
+  document.getElementById("root"),
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
